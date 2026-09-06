@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity AI — Autonomous Multi-Model AI Agent Platform</title>
+    <meta name="description" content="Infinity AI is a powerful, free, zero-error AI agent platform featuring Web Search RAG, FLUX Image Generation, Live Code Interpreter, Voice controls, and Multi-Agent Personas.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f4ff',
+                            100: '#e0e9ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        cyanAccent: '#06b6d4',
+                        violetAccent: '#8b5cf6',
+                        pinkAccent: '#ec4899',
+                        darkBg: '#090d16',
+                        darkSurface: '#111827',
+                        darkCard: '#1f2937',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.6', filter: 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))' },
+                            '50%': { opacity: '1', filter: 'drop-shadow(0 0 25px rgba(139, 92, 246, 0.9))' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marked.js (Markdown parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Highlight.js (Syntax Highlighting) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <!-- KaTeX (Math LaTeX rendering) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-darkBg text-slate-100 font-sans h-screen flex overflow-hidden antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Ambient Glowing Background Canvas -->
+    <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- App Wrapper -->
+    <div class="relative z-10 flex w-full h-full overflow-hidden">
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-72 bg-darkSurface/90 backdrop-blur-xl border-r border-slate-800/80 flex flex-col transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-violet-600 to-cyanAccent p-0.5 shadow-lg shadow-brand-500/20">
+                        <div class="w-full h-full bg-darkBg rounded-[10px] flex items-center justify-center">
+                            <i class="fa-solid fa-infinity text-transparent bg-clip-text bg-gradient-to-r from-cyanAccent to-violetAccent text-xl animate-pulse"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-wide text-white flex items-center gap-1.5">
+                            Infinity <span class="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-brand-600 to-violet-600 text-white font-medium">AI 2.0</span>
+                        </h1>
+                        <p class="text-[11px] text-slate-400">Autonomous Agent Platform</p>
+                    </div>
+                </div>
+                <button id="closeSidebarMobile" class="lg:hidden text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- New Chat Button -->
+            <div class="p-3">
+                <button id="newChatBtn" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 hover:from-brand-500 to-violet-600 hover:to-violet-500 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25 transition-all duration-200 active:scale-[0.98]">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>New Session</span>
+                </button>
+            </div>
+
+            <!-- Agent Personas Selection -->
+            <div class="px-3 py-2 border-b border-slate-800/50">
+                <label class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block px-2 mb-2">Agent Persona</label>
+                <div class="grid grid-cols-5 gap-1" id="personaSelector">
+                    <!-- Dynamic Personas injected via JS -->
+                </div>
+            </div>
+
+            <!-- Chat History Sessions List -->
+            <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar" id="chatHistoryList">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Sidebar Footer Settings -->
+            <div class="p-3 border-t border-slate-800/80 bg-darkBg/50 space-y-2">
+                <!-- Active Model Selector -->
+                <div class="relative">
+                    <button id="modelDropdownBtn" class="w-full p-2 rounded-lg bg-darkCard/70 border border-slate-700/60 hover:border-slate-500 text-left flex items-center justify-between text-xs text-slate-200 transition">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span id="currentModelLabel" class="font-medium truncate">Infinity Pro (Free)</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="modelDropdownMenu" class="absolute bottom-full left-0 w-full mb-1 bg-darkSurface border border-slate-700 rounded-xl shadow-2xl p-1.5 hidden z-50 text-xs space-y-1">
+                        <button data-model="infinity-free" class="model-option w-full text-left p-2 rounded-lg hover:bg-slate-800 flex items-center justify-between font-medium text-emerald-400">
+                            <span>Infinity Pro (Free)</span>
+                            <i class="fa-solid fa-bolt text-[10px]"></i>
+                        </button>
+                        <button data-model="gemini-free" class="model-option w-full text-left p-2 rounded-lg hover:bg-slate-800 flex items-center justify-between font-medium text-cyan-400">
+                            <span>Google Gemini (Free)</span>
+                            <i class="fa-solid fa-sparkles text-[10px]"></i>
+                        </button>
+                        <button data-model="chatgpt-free" class="model-option w-full text-left p-2 rounded-lg hover:bg-slate-800 flex items-center justify-between font-medium text-indigo-400">
+                            <span>ChatGPT GPT-4o (Free)</span>
+                            <i class="fa-solid fa-robot text-[10px]"></i>
+                        </button>
+                        <button data-model="infinity-code" class="model-option w-full text-left p-2 rounded-lg hover:bg-slate-800 flex items-center justify-between text-blue-400">
+                            <span>Infinity Code Wizard</span>
+                            <i class="fa-solid fa-code text-[10px]"></i>
+                        </button>
+                        <button data-model="infinity-rag" class="model-option w-full text-left p-2 rounded-lg hover:bg-slate-800 flex items-center justify-between text-violet-400">
+                            <span>Infinity Deep Research</span>
+                            <i class="fa-solid fa-globe text-[10px]"></i>
+                        </button>
+                        <div class="border-t border-slate-800 my-1"></div>
+                        <button id="openKeyConfigBtn" class="w-full text-left p-2 rounded-lg hover:bg-slate-800 text-amber-400 flex items-center justify-between font-medium">
+                            <span>Custom API Key Mode</span>
+                            <i class="fa-solid fa-key text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Trigger -->
+                <button id="openSettingsBtn" class="w-full py-2 px-3 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white text-xs flex items-center justify-between transition">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-slate-400"></i>
+                        <span>Agent Configuration</span>
+                    </span>
+                    <i class="fa-solid fa-gear text-[11px] text-slate-500"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col h-full bg-darkBg relative overflow-hidden">
+            <!-- Header Bar -->
+            <header class="h-14 border-b border-slate-800/80 bg-darkSurface/60 backdrop-blur-md px-4 flex items-center justify-between z-20">
+                <div class="flex items-center gap-3">
+                    <button id="openSidebarMobile" class="lg:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div id="personaAvatarHeader" class="w-7 h-7 rounded-lg bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400 text-sm">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h2 id="currentPersonaTitle" class="font-semibold text-sm text-white leading-tight">General Agent</h2>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                <span id="agentStatusBadge" class="text-[11px] text-slate-400">Ready & Autonomous</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Right -->
+                <div class="flex items-center gap-2">
+                    <!-- Light / Dark Theme Toggle -->
+                    <button id="themeToggleBtn" class="p-2 rounded-lg bg-slate-800/70 border border-slate-700/60 text-amber-400 hover:text-amber-300 hover:border-amber-400/50 text-xs flex items-center gap-1.5 transition" title="Toggle Light/Dark Mode">
+                        <i class="fa-solid fa-sun text-sm" id="themeIcon"></i>
+                        <span class="hidden sm:inline text-[11px]" id="themeText">Light</span>
+                    </button>
+
+                    <!-- Text-To-Speech Global Mute/Unmute -->
+                    <button id="toggleTtsBtn" class="p-2 rounded-lg bg-slate-800/70 border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 text-xs flex items-center gap-1.5 transition" title="Toggle Auto Voice Readout">
+                        <i class="fa-solid fa-volume-xmark text-sm" id="ttsIcon"></i>
+                        <span class="hidden sm:inline text-[11px]" id="ttsText">Voice Off</span>
+                    </button>
+
+                    <!-- Export Chat Dropdown -->
+                    <div class="relative">
+                        <button id="exportDropdownBtn" class="p-2 rounded-lg bg-slate-800/70 border border-slate-700/60 text-slate-300 hover:text-white hover:border-slate-500 text-xs flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="hidden sm:inline">Export</span>
+                        </button>
+                        <div id="exportMenu" class="absolute right-0 top-full mt-1 w-40 bg-darkSurface border border-slate-700 rounded-xl shadow-xl p-1 hidden z-50 text-xs">
+                            <button id="exportMarkdownBtn" class="w-full text-left p-2 rounded-lg hover:bg-slate-800 text-slate-300 flex items-center gap-2">
+                                <i class="fa-regular fa-file-code text-brand-400"></i> Markdown (.md)
+                            </button>
+                            <button id="exportJsonBtn" class="w-full text-left p-2 rounded-lg hover:bg-slate-800 text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-code text-cyan-400"></i> JSON Backup
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Clear Chat -->
+                    <button id="clearChatBtn" class="p-2 rounded-lg bg-slate-800/70 border border-slate-700/60 text-slate-400 hover:text-red-400 hover:border-red-500/40 text-xs transition" title="Clear current session">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Messages Container -->
+            <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar relative">
+                <!-- Welcome Prompt Hub View (shown when session is empty) -->
+                <div id="welcomeHub" class="max-w-4xl mx-auto py-8 px-4 flex flex-col items-center justify-center text-center space-y-8">
+                    <!-- Glowing Icon Hero -->
+                    <div class="relative">
+                        <div class="absolute -inset-4 rounded-full bg-gradient-to-r from-brand-600 via-violet-600 to-cyanAccent blur-xl opacity-50 animate-pulse-glow"></div>
+                        <div class="relative w-20 h-20 rounded-2xl bg-darkSurface border border-slate-700/80 flex items-center justify-center shadow-2xl">
+                            <i class="fa-solid fa-infinity text-4xl text-transparent bg-clip-text bg-gradient-to-r from-cyanAccent via-brand-400 to-violetAccent"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                            Meet <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyanAccent via-brand-400 to-violetAccent">Infinity AI</span>
+                        </h2>
+                        <p class="text-slate-400 text-sm sm:text-base max-w-xl mt-2">
+                            Your free, autonomous AI agent equipped with real-time web search, FLUX image generation, live code preview, and zero error handling.
+                        </p>
+                    </div>
+
+                    <!-- Capabilities Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl">
+                        <div class="p-3.5 rounded-xl bg-darkSurface/50 border border-slate-800/80 hover:border-brand-500/50 transition text-left space-y-1">
+                            <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-sm mb-2">
+                                <i class="fa-solid fa-globe"></i>
+                            </div>
+                            <h3 class="text-xs font-semibold text-white">Live Web RAG</h3>
+                            <p class="text-[11px] text-slate-400">Retrieves updated real-time facts & sources.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-darkSurface/50 border border-slate-800/80 hover:border-pink-500/50 transition text-left space-y-1">
+                            <div class="w-8 h-8 rounded-lg bg-pink-500/10 text-pink-400 flex items-center justify-center text-sm mb-2">
+                                <i class="fa-solid fa-image"></i>
+                            </div>
+                            <h3 class="text-xs font-semibold text-white">FLUX Image Gen</h3>
+                            <p class="text-[11px] text-slate-400">Creates ultra-realistic visual art instantly.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-darkSurface/50 border border-slate-800/80 hover:border-brand-500/50 transition text-left space-y-1">
+                            <div class="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 flex items-center justify-center text-sm mb-2">
+                                <i class="fa-solid fa-code"></i>
+                            </div>
+                            <h3 class="text-xs font-semibold text-white">Code Interpreter</h3>
+                            <p class="text-[11px] text-slate-400">Writes and previews HTML/JS live in browser.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-darkSurface/50 border border-slate-800/80 hover:border-violet-500/50 transition text-left space-y-1">
+                            <div class="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center text-sm mb-2">
+                                <i class="fa-solid fa-calculator"></i>
+                            </div>
+                            <h3 class="text-xs font-semibold text-white">Math & Logic</h3>
+                            <p class="text-[11px] text-slate-400">Solves complex math with step-by-step reasoning.</p>
+                        </div>
+                    </div>
+
+                    <!-- Starter Cards Hub -->
+                    <div class="w-full max-w-3xl space-y-3">
+                        <div class="flex items-center justify-between px-1">
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Suggested Prompts</span>
+                            <span class="text-[11px] text-slate-500">Click to run immediately</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left" id="starterPromptsGrid">
+                            <!-- Injected by prompts.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Message List (Dynamic injection) -->
+                <div id="messagesList" class="max-w-4xl mx-auto space-y-6 hidden"></div>
+            </div>
+
+            <!-- Bottom Floating Chat Input -->
+            <div class="p-3 sm:p-4 border-t border-slate-800/80 bg-darkSurface/80 backdrop-blur-xl z-20">
+                <div class="max-w-4xl mx-auto space-y-2">
+                    
+                    <!-- Autonomous Tools Toggle Badges -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs custom-scrollbar">
+                        <span class="text-[11px] text-slate-400 font-medium shrink-0">Agent Tools:</span>
+                        
+                        <button id="toggleSearchToolBtn" data-tool="web_search" class="tool-chip active border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 py-1 px-2.5 rounded-full flex items-center gap-1.5 hover:bg-cyan-500/20 transition shrink-0">
+                            <i class="fa-solid fa-globe text-[11px]"></i>
+                            <span>Web Search</span>
+                        </button>
+
+                        <button id="toggleImageToolBtn" data-tool="image_gen" class="tool-chip active border border-pink-500/40 bg-pink-500/10 text-pink-300 py-1 px-2.5 rounded-full flex items-center gap-1.5 hover:bg-pink-500/20 transition shrink-0">
+                            <i class="fa-solid fa-palette text-[11px]"></i>
+                            <span>Image Gen</span>
+                        </button>
+
+                        <button id="toggleCodeToolBtn" data-tool="code_runner" class="tool-chip active border border-brand-500/40 bg-brand-500/10 text-brand-300 py-1 px-2.5 rounded-full flex items-center gap-1.5 hover:bg-brand-500/20 transition shrink-0">
+                            <i class="fa-solid fa-terminal text-[11px]"></i>
+                            <span>Code Sandbox</span>
+                        </button>
+
+                        <button id="toggleMathToolBtn" data-tool="math_solver" class="tool-chip active border border-violet-500/40 bg-violet-500/10 text-violet-300 py-1 px-2.5 rounded-full flex items-center gap-1.5 hover:bg-violet-500/20 transition shrink-0">
+                            <i class="fa-solid fa-calculator text-[11px]"></i>
+                            <span>Math Solver</span>
+                        </button>
+                    </div>
+
+                    <!-- Input Box -->
+                    <div class="relative bg-darkBg/90 border border-slate-700/80 focus-within:border-brand-500 rounded-2xl p-2 shadow-2xl transition duration-200">
+                        <textarea id="userInput" rows="1" placeholder="Ask Infinity AI anything or request an image, code, research..." class="w-full bg-transparent text-white placeholder-slate-500 text-sm px-3 py-2 resize-none focus:outline-none custom-scrollbar max-h-36"></textarea>
+
+                        <!-- Bottom Control Bar inside Input -->
+                        <div class="flex items-center justify-between pt-2 px-2 border-t border-slate-800/60">
+                            <div class="flex items-center gap-1">
+                                <!-- Voice Input Mic -->
+                                <button id="voiceMicBtn" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition relative" title="Voice Input (Speech-to-Text)">
+                                    <i class="fa-solid fa-microphone text-sm"></i>
+                                    <span id="micPulse" class="hidden absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                                </button>
+
+                                <!-- Attach / Sample Prompt simulation -->
+                                <button id="quickTemplateBtn" class="p-2 rounded-xl text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition" title="Insert prompt template">
+                                    <i class="fa-solid fa-bolt text-sm"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-500 hidden sm:inline">Shift + Enter for new line</span>
+                                <button id="sendMessageBtn" class="w-9 h-9 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 hover:from-brand-500 hover:to-violet-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/30 transition active:scale-95 disabled:opacity-50">
+                                    <i class="fa-solid fa-arrow-up text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Live Code Preview Runner Modal -->
+    <div id="codeRunnerModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex flex-col p-4 sm:p-8">
+        <div class="bg-darkSurface border border-slate-700 rounded-2xl flex-1 flex flex-col overflow-hidden shadow-2xl">
+            <div class="h-12 border-b border-slate-800 px-4 flex items-center justify-between bg-darkBg">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                    <span class="text-xs font-semibold text-slate-300 ml-2"><i class="fa-solid fa-play text-emerald-400 mr-1"></i> Live Code Sandbox Preview</span>
+                </div>
+                <button id="closeCodeRunnerBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="flex-1 bg-white relative">
+                <iframe id="codeRunnerFrame" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Settings Configuration Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-darkSurface border border-slate-700/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-darkBg/60">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-400"></i>
+                    <span>Infinity Agent Settings</span>
+                </h3>
+                <button id="closeSettingsBtn" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                <!-- Custom API Keys Section -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-amber-400"></i> Custom API Keys (Optional)
+                        </label>
+                        <span class="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">Default Free Engine Active</span>
+                    </div>
+                    <p class="text-xs text-slate-400">If you want to use your own keys, paste them below. All keys stay strictly on your local browser.</p>
+
+                    <div class="space-y-2">
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Google Gemini API Key</label>
+                            <input type="password" id="geminiApiKey" placeholder="AIzaSy..." class="w-full bg-darkBg border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Groq API Key</label>
+                            <input type="password" id="groqApiKey" placeholder="gsk_..." class="w-full bg-darkBg border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">OpenAI API Key</label>
+                            <input type="password" id="openaiApiKey" placeholder="sk-..." class="w-full bg-darkBg border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-4 space-y-4">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-300 block">Agent Intelligence Controls</label>
+                    
+                    <div>
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="text-slate-300">Creativity / Temperature</span>
+                            <span id="tempValue" class="text-brand-400 font-mono">0.7</span>
+                        </div>
+                        <input type="range" id="tempSlider" min="0" max="1" step="0.1" value="0.7" class="w-full accent-brand-500 bg-slate-800">
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-300 block mb-1">Voice Reader Voice</label>
+                        <select id="voiceSelect" class="w-full bg-darkBg border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none">
+                            <option value="">Default System Voice</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-darkBg/60 flex justify-end gap-2">
+                <button id="saveSettingsBtn" class="py-2 px-5 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 hover:from-brand-500 hover:to-violet-500 text-white font-medium text-xs shadow-lg shadow-brand-500/25">
+                    Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript Modules -->
+    <script src="js/prompts.js"></script>
+    <script src="js/tools.js"></script>
+    <script src="js/aiService.js"></script>
+    <script src="js/speechService.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
